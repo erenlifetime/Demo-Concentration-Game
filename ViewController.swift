@@ -1,46 +1,62 @@
 //
 //  ViewController.swift
-//  Subject
+//  Concentration
 //
-//  Created by Eren lifetime on 5.12.2023.
+//  Created by Eren lifetime on 3.03.2024.
 //
 import UIKit
-class ViewController:UIViewController{
-    @IBOutlet weak var label1: UILabel!
-    var sayac:Int = 0{
+import Foundation
+class ViewController: UIViewController {
+    lazy var game: Concentration = Concentration(cardCiftiSayisi: cardCiftiSayisi)
+    
+    var cardCiftiSayisi: Int {
+        return (cardAllButtons.count+1) / 2
+    }
+    var flipCount = 0{
         didSet{
-            label1.text = "Sayaç: \(sayac)"
+            flipCountLabel.text = ("Flips: \(flipCount)")
         }
     }
-    @IBOutlet var allButtonPressed: [UIButton]!
-    @IBAction func selectCardPressed(_ sender: UIButton) {
-        let emojiler = ["😅","🥹","😅","🥹"]
-        sayac += 1
-        if let cardNo = allButtonPressed.index(of:sender){
-            flipCard(emoji: emojiler[cardNo], on: sender)
+    @IBOutlet weak var flipCountLabel: UILabel!
+    @IBOutlet var cardAllButtons: [UIButton]!
+    @IBAction func touchCard(_ sender: UIButton) {
+         flipCount += 1
+        if let cardNumber = cardAllButtons.firstIndex(of:sender){
+            game.chooseCard(at: cardNumber)
+            updateViewFromModel()
+            
         }else{
-            print(" allButtonPressed ı seçmediniz")
+    print("Chosen card was not in cardAllButtons")
         }
-        
-        func flipCard(emoji:String,button:UIButton){
-            if button.currentTitle == emoji{
-                button.setTitle("", for: UIControl.State.normal)
-                button.backgroundColor = .orange
+    }
+    func updateViewFromModel(){
+        for index in cardAllButtons.indices{
+            let button = cardAllButtons[index]
+            let card = game.cards[index]
+            if card.isFaceUp{
+                button.setTitle(emoji(for:card), for: UIControl.State.normal)
+                button.backgroundColor = UIColor.white
             }else{
-                button.setTitle(emoji, for: UIControl.State.normal)
-                button.backgroundColor = .white
-            }
-        }
-            func otherCard(emoji:String, button:UIButton){
-                if button.currentTitle == emoji{
-                    button.setTitle("", for: UIControl.State.normal)
-                    button.backgroundColor = .orange
-                }else{
-                    button.setTitle(emoji, for: UIControl.State.normal)
-                    button.backgroundColor = .white
-                }
+                button.setTitle("", for: UIControl.State.normal)
+                button.backgroundColor = card.isMatched ? UIColor.orange : UIColor.orange
             }
         }
     }
-
-
+private var emojiChoices = ["🐰","🐭","🐷","🐮","🐴","🦄","🐹","🐸","🐱"]
+private var emoji = [Int:String]()
+private func emoji(for card:Card) -> String{
+    if emoji[card.identifier] == nil , emojiChoices.count > 0{
+        emoji[card.identifier] = emojiChoices.remove(at: emojiChoices.count.arc4random)
+    }
+     return emoji[card.identifier] ?? "?"
+    }
+}
+extension Int {
+    var arc4random: Int{
+        if self > 0 {
+            return Int(arc4random_uniform(UInt32(abs(self))))
+        }else{
+            return 0
+        }
+    }
+}
